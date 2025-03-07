@@ -42,84 +42,105 @@ class _NewsPageState extends State<NewsPage> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Column(
+        child: Stack(
           children: [
-            Stack(
+            Column(
               children: [
-                // Video Player
-                SizedBox(
-                  height: 400,
-                  width: double.infinity,
-                  child: _controller.value.isInitialized
-                      ? VideoPlayer(_controller)
-                      : const Center(child: CircularProgressIndicator()),
+                Stack(
+                  children: [
+                    // Video Player
+                    SizedBox(
+                      height: 400,
+                      width: double.infinity,
+                      child: _controller.value.isInitialized
+                          ? VideoPlayer(_controller)
+                          : const Center(child: CircularProgressIndicator()),
+                    ),
+                    const Positioned(
+                      left: 10,
+                      top: 10,
+                      child: Text("LEBRON JAMES",
+                          style: TextStyle(color: Colors.white, fontSize: 18)),
+                    ),
+                    Positioned(
+                      right: 10,
+                      top: 10,
+                      child: IconButton(
+                        icon: const Icon(Icons.volume_up, color: Colors.white),
+                        onPressed: () {
+                          setState(() {
+                            _controller.value.volume == 0
+                                ? _controller.setVolume(1.0)
+                                : _controller.setVolume(0.0);
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                const Positioned(
-                  left: 10,
-                  top: 10,
-                  child: Text("LEBRON JAMES",
-                      style: TextStyle(color: Colors.white, fontSize: 18)),
-                ),
-                Positioned(
-                  right: 10,
-                  top: 10,
-                  child: IconButton(
-                    icon: const Icon(Icons.volume_up, color: Colors.white),
-                    onPressed: () {
-                      setState(() {
-                        _controller.value.volume == 0
-                            ? _controller.setVolume(1.0)
-                            : _controller.setVolume(0.0);
-                      });
-                    },
+                // Voting Section
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ReactionButton(Icons.thumb_up, "222", Colors.green),
+                      const SizedBox(width: 16),
+                      ReactionButton(Icons.thumb_down, "222", Colors.red),
+                    ],
                   ),
                 ),
               ],
             ),
-            // Voting Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ReactionButton(Icons.thumb_up, "222", Colors.green),
-                  const SizedBox(width: 16),
-                  ReactionButton(Icons.thumb_down, "222", Colors.red),
-                ],
+            // Floating bottom navigation bar
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                height: 70,
+                decoration: BoxDecoration(
+                  color: Colors.grey[900],
+                  borderRadius: BorderRadius.circular(40),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.home, color: Colors.redAccent),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/');
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/stories');
+                      },
+                    ),
+                    IconButton(
+                      icon:
+                          const Icon(Icons.card_giftcard, color: Colors.white),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.person, color: Colors.white),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.play_arrow),
-            label: 'Play',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_soccer),
-            label: 'News',
-          ),
-        ],
-        currentIndex: 2,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/stories');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/news');
-              break;
-          }
-        },
       ),
     );
   }

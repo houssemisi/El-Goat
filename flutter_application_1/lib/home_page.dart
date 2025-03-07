@@ -189,7 +189,7 @@ class HomeContent extends StatelessWidget {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/registration');
+                      Navigator.pushNamed(context, '/login');
                     },
                     child: const Text('Login'),
                   ),
