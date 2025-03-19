@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   video_player: ^2.2.19
   cupertino_icons: ^1.0.8
+  device_preview: ^1.2.0  # Updated version
 
 dev_dependencies:
   flutter_test:
@@ -30,3 +31,5 @@ flutter:
     - assets/images/dali.jpeg
     - assets/images/cr7.jpeg
     - assets/images/mb.jpeg
+    - assets/images/goat.png
+    - assets/videos/football.mp4

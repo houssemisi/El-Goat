@@ -10,6 +10,8 @@ class NewsPage extends StatefulWidget {
 
 class _NewsPageState extends State<NewsPage> {
   late VideoPlayerController _controller;
+  bool _isPlaying = true;
+  bool _isMuted = false;
 
   @override
   void initState() {
@@ -26,6 +28,30 @@ class _NewsPageState extends State<NewsPage> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _togglePlayPause() {
+    setState(() {
+      if (_controller.value.isPlaying) {
+        _controller.pause();
+        _isPlaying = false;
+      } else {
+        _controller.play();
+        _isPlaying = true;
+      }
+    });
+  }
+
+  void _toggleMute() {
+    setState(() {
+      if (_isMuted) {
+        _controller.setVolume(1.0);
+        _isMuted = false;
+      } else {
+        _controller.setVolume(0.0);
+        _isMuted = true;
+      }
+    });
   }
 
   @override
@@ -56,24 +82,32 @@ class _NewsPageState extends State<NewsPage> {
                           ? VideoPlayer(_controller)
                           : const Center(child: CircularProgressIndicator()),
                     ),
-                    const Positioned(
+                    Positioned(
                       left: 10,
                       top: 10,
-                      child: Text("LEBRON JAMES",
+                      child: Text("El Goat",
                           style: TextStyle(color: Colors.white, fontSize: 18)),
                     ),
                     Positioned(
                       right: 10,
                       top: 10,
                       child: IconButton(
-                        icon: const Icon(Icons.volume_up, color: Colors.white),
-                        onPressed: () {
-                          setState(() {
-                            _controller.value.volume == 0
-                                ? _controller.setVolume(1.0)
-                                : _controller.setVolume(0.0);
-                          });
-                        },
+                        icon: Icon(
+                          _isMuted ? Icons.volume_off : Icons.volume_up,
+                          color: Colors.white,
+                        ),
+                        onPressed: _toggleMute,
+                      ),
+                    ),
+                    Positioned(
+                      right: 10,
+                      bottom: 10,
+                      child: IconButton(
+                        icon: Icon(
+                          _isPlaying ? Icons.pause : Icons.play_arrow,
+                          color: Colors.white,
+                        ),
+                        onPressed: _togglePlayPause,
                       ),
                     ),
                   ],

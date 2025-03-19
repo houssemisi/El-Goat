@@ -6,9 +6,6 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -23,6 +20,14 @@ class LoginPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Center(
+                  child: Image.asset(
+                    'assets/images/goat.png', // Replace with your actual image path
+                    height: 40,
+                    width: 40,
+                  ),
+                ),
+                const SizedBox(height: 20),
                 const Text(
                   "Welcome to",
                   style: TextStyle(color: Colors.white, fontSize: 20),
@@ -38,12 +43,17 @@ class LoginPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      child: const Text("Login",
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
+                    Column(
+                      children: [
+                        const Text("Login",
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 16)),
+                        const SizedBox(height: 4),
+                        const CircleAvatar(
+                          radius: 4,
+                          backgroundColor: Colors.yellow,
+                        ),
+                      ],
                     ),
                     const SizedBox(width: 10),
                     Container(
@@ -111,35 +121,51 @@ class LoginPage extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+      // Floating bottom navigation bar
+      bottomNavigationBar: Positioned(
+        left: 20,
+        right: 20,
+        bottom: 20,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          height: 70,
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.play_arrow),
-            label: 'Play',
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.home, color: Colors.redAccent),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/stories');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.card_giftcard, color: Colors.white),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.person, color: Colors.white),
+                onPressed: () {},
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_soccer),
-            label: 'News',
-          ),
-        ],
-        currentIndex: 0,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/');
-              break;
-            case 1:
-              Navigator.pushNamed(context, '/stories');
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/news');
-              break;
-          }
-        },
+        ),
       ),
     );
   }

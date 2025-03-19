@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:device_preview/device_preview.dart';
 import 'home_page.dart';
 import 'news_page.dart';
 import 'stories_page.dart';
 import 'registration_page.dart';
+import 'login.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(DevicePreview(
+    enabled: !kReleaseMode,
+    builder: (context) => const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -25,7 +31,10 @@ class MyApp extends StatelessWidget {
         '/news': (context) => const NewsPage(),
         '/stories': (context) => const StoriesPage(),
         '/registration': (context) => const RegistrationPage(),
+        '/login': (context) => const LoginPage(),
       },
+      builder: DevicePreview.appBuilder,
+      locale: DevicePreview.locale(context),
     );
   }
 }

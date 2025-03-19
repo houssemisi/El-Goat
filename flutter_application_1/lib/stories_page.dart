@@ -8,9 +8,7 @@ class StoriesPage extends StatefulWidget {
 }
 
 class _StoriesPageState extends State<StoriesPage> {
-  int _selectedIndex = 0;
-  bool _isSearching = false;
-  final TextEditingController _searchController = TextEditingController();
+  int _selectedIndex = 1; // Set the initial index to 1 for Stories
 
   List storiesArr = [
     {
@@ -68,94 +66,9 @@ class _StoriesPageState extends State<StoriesPage> {
     });
   }
 
-  void _startSearch() {
-    setState(() {
-      _isSearching = true;
-    });
-  }
-
-  void _stopSearch() {
-    setState(() {
-      _isSearching = false;
-      _searchController.clear();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-
     return Scaffold(
-      key: scaffoldKey,
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search...',
-                  border: InputBorder.none,
-                ),
-                style: const TextStyle(color: Colors.white),
-              )
-            : const Text('Stories'),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            scaffoldKey.currentState?.openDrawer();
-          },
-        ),
-        actions: [
-          _isSearching
-              ? IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _stopSearch,
-                )
-              : IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _startSearch,
-                ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'El Goat',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.contact_mail),
-              title: const Text('Contact'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -252,23 +165,51 @@ class _StoriesPageState extends State<StoriesPage> {
           },
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+      // Floating bottom navigation bar
+      bottomNavigationBar: Positioned(
+        left: 20,
+        right: 20,
+        bottom: 20,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          height: 70,
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.play_arrow),
-            label: 'Play',
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.home, color: Colors.redAccent),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/stories');
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.card_giftcard, color: Colors.white),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.person, color: Colors.white),
+                onPressed: () {},
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sports_soccer),
-            label: 'News',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        ),
       ),
     );
   }
