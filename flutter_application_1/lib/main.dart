@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter_application_1/news_home_page.dart';
 import 'home_page.dart';
-import 'news_page.dart';
 import 'stories_page.dart';
 import 'registration_page.dart';
 import 'login.dart';
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
-        '/news': (context) => const NewsPage(),
+        '/news': (context) => NewsHomePage(toggleTheme: () {}),
         '/stories': (context) => const StoriesPage(),
         '/registration': (context) => const RegistrationPage(),
         '/login': (context) => const LoginPage(),

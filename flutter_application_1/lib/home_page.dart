@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
               leading: const Icon(Icons.home),
               title: const Text('Home'),
               onTap: () {
-                Navigator.pushNamed(context, '/accueil');
+                Navigator.pushNamed(context, '/');
               },
             ),
             ListTile(
@@ -291,7 +291,10 @@ class _HomePageState extends State<HomePage> {
               IconButton(
                 icon: const Icon(Icons.play_circle_outline),
                 onPressed: () {
-                  Navigator.pushNamed(context, '/play');
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NewsPage()),
+                  );
                 },
               ),
               IconButton(
