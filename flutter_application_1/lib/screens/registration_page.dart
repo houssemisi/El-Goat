@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'success_page.dart';
+import '../screens/success_page.dart'; // Correct relative path
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});

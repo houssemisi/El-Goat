@@ -8,7 +8,7 @@ class StoriesPage extends StatefulWidget {
 }
 
 class _StoriesPageState extends State<StoriesPage> {
-  int _selectedIndex = 1; // Set the initial index to 1 for Stories
+  int _selectedIndex = 0;
 
   List storiesArr = [
     {

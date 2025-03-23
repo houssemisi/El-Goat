@@ -1,23 +1,39 @@
 import 'package:flutter/material.dart';
-import 'news_page.dart';
+import '../widgets/navbar/bottom_navbar.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/');
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/news'); // Navigate to NewsPage
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/news_home'); // Navigate to NewsHomePage
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/profile'); // Navigate to Profile page
+        break;
+    }
+  }
+
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
-
-  static final List<Widget> _widgetOptions = <Widget>[
-    HomeContent(),
-    Text('Play Page Content'),
-    NewsPage(),
-  ];
 
   void _startSearch() {
     setState(() {
@@ -269,43 +285,15 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 24),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
-        child: Container(
-          height: 60.0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.home),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.play_circle_outline),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const NewsPage()),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.grid_view),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/news');
-                },
-              ),
-            ],
-          ),
-        ),
+      bottomNavigationBar: BottomNavbar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }
@@ -384,5 +372,21 @@ class CurvedPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
+  }
+}
+
+class NewsPage extends StatelessWidget {
+  const NewsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('News Page'),
+      ),
+      body: const Center(
+        child: Text('News Page Content'),
+      ),
+    );
   }
 }

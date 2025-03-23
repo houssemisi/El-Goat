@@ -41,9 +41,9 @@ class _NewsHomePageState extends State<NewsHomePage>
                 controller: _tabController,
                 children: [
                   _buildTabContent('For You'),
+                  _buildTabContent('Domestic'),
+                  _buildTabContent('International'),
                   _buildTabContent('Sports'),
-                  _buildTabContent('Business'),
-                  _buildTabContent('Technology'),
                 ],
               ),
             ),
@@ -60,8 +60,11 @@ class _NewsHomePageState extends State<NewsHomePage>
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            "News Hunt",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            "El Goat News",
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 197, 194, 194)),
           ),
           Row(
             children: [
@@ -95,8 +98,8 @@ class _NewsHomePageState extends State<NewsHomePage>
       tabs: const [
         Tab(text: "For You"),
         Tab(text: "Sports"),
-        Tab(text: "Business"),
-        Tab(text: "Technology"),
+        Tab(text: "Domestic"),
+        Tab(text: "International"),
       ],
     );
   }
