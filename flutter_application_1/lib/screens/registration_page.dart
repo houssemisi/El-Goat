@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../screens/success_page.dart'; // Correct relative path
+import '../screens/success_page.dart';
+import '../widgets/navbar/bottom_navbar.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -14,6 +15,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  int _selectedIndex = 0;
 
   @override
   void dispose() {
@@ -23,9 +25,29 @@ class _RegistrationPageState extends State<RegistrationPage> {
     super.dispose();
   }
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/');
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/stories');
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/news');
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/profile');
+        break;
+    }
+  }
+
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // Navigate to the success page
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const SuccessPage()),
@@ -52,7 +74,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               const SizedBox(height: 50),
               Center(
                 child: Image.asset(
-                  'assets/images/goat.png', // Replace with your actual image path
+                  'assets/images/goat.png',
                   height: 40,
                   width: 40,
                 ),
@@ -201,51 +223,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
           ),
         ),
       ),
-      // Floating bottom navigation bar
-      bottomNavigationBar: Positioned(
-        left: 20,
-        right: 20,
-        bottom: 20,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          height: 70,
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(40),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.home, color: Colors.redAccent),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.search, color: Colors.white),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/stories');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.card_giftcard, color: Colors.white),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.person, color: Colors.white),
-                onPressed: () {},
-              ),
-            ],
-          ),
-        ),
+      bottomNavigationBar: BottomNavbar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }

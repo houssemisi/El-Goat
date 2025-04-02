@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/navbar/bottom_navbar.dart';
 
 class NewsHomePage extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -13,6 +14,7 @@ class _NewsHomePageState extends State<NewsHomePage>
   late TabController _tabController;
   bool _showSearch = false;
   final TextEditingController _searchController = TextEditingController();
+  int _selectedIndex = 2;
 
   @override
   void initState() {
@@ -25,6 +27,27 @@ class _NewsHomePageState extends State<NewsHomePage>
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/');
+        break;
+      case 1:
+        Navigator.pushNamed(context, '/stories');
+        break;
+      case 2:
+        // Stay on NewsHomePage
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/profile');
+        break;
+    }
   }
 
   @override
@@ -49,6 +72,10 @@ class _NewsHomePageState extends State<NewsHomePage>
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavbar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }

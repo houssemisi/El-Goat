@@ -20,7 +20,19 @@ class BottomNavbar extends StatelessWidget {
         color: const Color(0xFF000000), // True black background
         child: BottomNavigationBar(
           currentIndex: selectedIndex,
-          onTap: onItemTapped,
+          onTap: (index) {
+            onItemTapped(index);
+            if (index == 0) {
+              Navigator.pushNamed(context, '/'); // Navigate to Home
+            } else if (index == 1) {
+              Navigator.pushNamed(context, '/stories'); // Navigate to Stories
+            } else if (index == 2) {
+              Navigator.pushNamed(
+                  context, '/news_reels'); // Navigate to News Reels
+            } else if (index == 3) {
+              Navigator.pushNamed(context, '/profile'); // Navigate to Profile
+            }
+          },
           backgroundColor:
               Colors.transparent, // Transparent to show Material color
           selectedItemColor: Theme.of(context).brightness == Brightness.light

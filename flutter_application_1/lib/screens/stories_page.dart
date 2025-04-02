@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/navbar/bottom_navbar.dart';
 
 class StoriesPage extends StatefulWidget {
   const StoriesPage({super.key});
@@ -8,7 +9,7 @@ class StoriesPage extends StatefulWidget {
 }
 
 class _StoriesPageState extends State<StoriesPage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   List storiesArr = [
     {
@@ -52,18 +53,22 @@ class _StoriesPageState extends State<StoriesPage> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      switch (index) {
-        case 0:
-          Navigator.pushNamed(context, '/');
-          break;
-        case 1:
-          Navigator.pushNamed(context, '/stories');
-          break;
-        case 2:
-          Navigator.pushNamed(context, '/news');
-          break;
-      }
     });
+
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, '/');
+        break;
+      case 1:
+        // Stay on StoriesPage
+        break;
+      case 2:
+        Navigator.pushNamed(context, '/news');
+        break;
+      case 3:
+        Navigator.pushNamed(context, '/profile');
+        break;
+    }
   }
 
   @override
@@ -165,51 +170,9 @@ class _StoriesPageState extends State<StoriesPage> {
           },
         ),
       ),
-      // Floating bottom navigation bar
-      bottomNavigationBar: Positioned(
-        left: 20,
-        right: 20,
-        bottom: 20,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          height: 70,
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(40),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.home, color: Colors.redAccent),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.search, color: Colors.white),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/stories');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.card_giftcard, color: Colors.white),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.person, color: Colors.white),
-                onPressed: () {},
-              ),
-            ],
-          ),
-        ),
+      bottomNavigationBar: BottomNavbar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }

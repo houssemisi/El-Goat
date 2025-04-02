@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
         Navigator.pushNamed(context, '/');
         break;
       case 1:
-        Navigator.pushNamed(context, '/news'); // Navigate to NewsPage
+        Navigator.pushNamed(context, '/news_reels'); // Navigate to NewsPage
         break;
       case 2:
         Navigator.pushNamed(context, '/news_home'); // Navigate to NewsHomePage
