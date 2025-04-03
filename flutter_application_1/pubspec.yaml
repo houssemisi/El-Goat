@@ -34,6 +34,8 @@ flutter:
     - assets/images/mb.jpeg
     - assets/images/goat.png
     - assets/images/football_field.jpeg
+    - assets/images/club_logo.jpeg
+    - assets/images/player1.jpeg
     - assets/videos/football.mp4
     - assets/videos/goal1.mp4
     - assets/videos/goal2.mp4

@@ -28,7 +28,6 @@ class _ProfilePageState extends State<ProfilePage> {
   int _selectedIndex = 3; // Default selected index for Profile
   String _bio = ''; // Stores the user's bio
   final List<String> _uploadedImages = []; // Stores paths of uploaded images
-
   final ImagePicker _picker = ImagePicker();
 
   void _onItemTapped(int index) {
@@ -50,50 +49,6 @@ class _ProfilePageState extends State<ProfilePage> {
         // Stay on ProfilePage
         break;
     }
-  }
-
-  void _showBioDialog() {
-    final TextEditingController bioController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Ajouter ma bio'),
-          content: TextField(
-            controller: bioController,
-            maxLines: 3,
-            style: const TextStyle(color: Colors.black), // Black text
-            decoration: const InputDecoration(
-              hintText: 'Écrivez quelque chose sur vous...',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-              },
-              child: const Text('Annuler'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _bio = bioController.text; // Save the bio
-                });
-                Navigator.pop(context); // Close the dialog
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color.fromARGB(255, 14, 140, 243), // Blue background
-                foregroundColor: Colors.white, // White text
-              ),
-              child: const Text('Confirmer'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _uploadImage() async {
@@ -125,24 +80,38 @@ class _ProfilePageState extends State<ProfilePage> {
             // Cover Image and Profile Picture
             Stack(
               children: [
-                Container(
-                  height: 200,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/football_field.jpeg'),
-                      fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      // Expand image functionality
+                    });
+                  },
+                  child: Container(
+                    height: 200,
+                    decoration: const BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('assets/images/football_field.jpeg'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
                 Positioned(
                   bottom: 10,
                   left: 20,
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.grey[800],
-                    child: const Text(
-                      'K',
-                      style: TextStyle(fontSize: 40, color: Colors.white),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        // Expand image functionality
+                      });
+                    },
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.grey[800],
+                      child: const Text(
+                        'K',
+                        style: TextStyle(fontSize: 40, color: Colors.white),
+                      ),
                     ),
                   ),
                 ),
@@ -201,40 +170,192 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: 20),
-            // About Section
+            // About Section and FIFA-Style Player Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // About Section
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'À propos',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _bio.isNotEmpty
+                            ? Text(
+                                _bio,
+                                style: const TextStyle(color: Colors.grey),
+                              )
+                            : const Text(
+                                'Dis-nous en plus sur toi',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Add bio functionality
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                          ),
+                          child: const Text('Ajouter ma bio'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  // FIFA-Style Player Card
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.amber[700], // Gold background
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.5),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize:
+                            MainAxisSize.min, // Adjust height dynamically
+                        children: [
+                          // Player Image
+                          CircleAvatar(
+                            radius: 40,
+                            backgroundImage: const AssetImage(
+                                'assets/images/player1.jpeg'), // Replace with player image
+                            backgroundColor: Colors.grey[800],
+                          ),
+                          const SizedBox(height: 10),
+                          // Player Name & Overall Rating
+                          const Text(
+                            "L. Yamal – 89 OVR",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 5),
+                          // Position & Club Badge
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "ST",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Image.asset(
+                                'assets/images/club_logo.jpeg', // Replace with club logo
+                                width: 25,
+                                height: 25,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          // Player Stats
+                          const Divider(color: Colors.white),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: const [
+                              // Left Column
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "PAC: 85",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    "SHO: 90",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    "PAS: 82",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              // Right Column
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "DRI: 88",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    "DEF: 40",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    "PHY: 78",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // My Journey Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'À propos',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _bio.isNotEmpty
-                      ? Text(
-                          _bio,
-                          style: const TextStyle(color: Colors.grey),
-                        )
-                      : const Text(
-                          'Dis-nous en plus sur toi',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _showBioDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                    ),
-                    child: const Text('Ajouter ma bio'),
-                  ),
-                  const SizedBox(height: 20),
                   const Text(
                     'My Journey',
                     style: TextStyle(
@@ -299,7 +420,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ],
         ),
       ),
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavbar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,

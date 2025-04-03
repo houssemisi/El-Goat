@@ -280,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                       icon: Icons.business,
                       title: 'Club',
                       onTap: () {
-                        Navigator.pushNamed(context, '/signup/club');
+                        Navigator.pushNamed(context, '/club_profile');
                       },
                     ),
                   ],
