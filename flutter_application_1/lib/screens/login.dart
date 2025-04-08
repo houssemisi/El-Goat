@@ -1,7 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final DatabaseReference _database =
+      FirebaseDatabase.instance.ref(); // Firebase Database reference
+  List<String> _registeredEmails = []; // List to store registered emails
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRegisteredEmails();
+  }
+
+  Future<void> _fetchRegisteredEmails() async {
+    try {
+      final snapshot = await _database.child('users').get();
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        setState(() {
+          _registeredEmails = data.values
+              .map((user) => user['email'] as String)
+              .toList(); // Extract emails
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching registered emails: $e')),
+      );
+    }
+  }
+
+  void _login() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    if (!_registeredEmails.contains(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email not registered')),
+      );
+      return;
+    }
+
+    // If email is valid, navigate to the home page
+    Navigator.pushNamed(context, '/');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +132,7 @@ class LoginPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 TextField(
+                  controller: _emailController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: "Email",
@@ -87,6 +147,7 @@ class LoginPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 15),
                 TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
@@ -102,9 +163,7 @@ class LoginPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/');
-                  },
+                  onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.yellow,
                     padding: const EdgeInsets.symmetric(
@@ -113,57 +172,15 @@ class LoginPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text("Login",
-                      style: TextStyle(color: Colors.black, fontSize: 18)),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.black,
+                        )
+                      : const Text("Login",
+                          style: TextStyle(color: Colors.black, fontSize: 18)),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-      // Floating bottom navigation bar
-      bottomNavigationBar: Positioned(
-        left: 20,
-        right: 20,
-        bottom: 20,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          height: 70,
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(40),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.home, color: Colors.redAccent),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.search, color: Colors.white),
-                onPressed: () {
-                  Navigator.pushNamed(context, '/stories');
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.card_giftcard, color: Colors.white),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.person, color: Colors.white),
-                onPressed: () {},
-              ),
-            ],
           ),
         ),
       ),

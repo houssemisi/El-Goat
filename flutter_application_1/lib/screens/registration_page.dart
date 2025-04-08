@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart'; // Import Firebase Realtime Database
 import '../screens/success_page.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 
@@ -16,6 +17,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   int _selectedIndex = 0;
+
+  final DatabaseReference _database =
+      FirebaseDatabase.instance.ref(); // Firebase Database reference
 
   @override
   void dispose() {
@@ -46,13 +50,27 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Navigate to Success Page if the form is valid
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SuccessPage()),
-      );
+      // Save user data to Firebase
+      try {
+        await _database.child('users').push().set({
+          'name': _nameController.text,
+          'email': _emailController.text,
+          'category': _selectedCategory,
+        });
+
+        // Navigate to Success Page if the form is valid
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SuccessPage()),
+        );
+      } catch (e) {
+        // Handle errors (e.g., network issues)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving data: $e')),
+        );
+      }
     }
   }
 
