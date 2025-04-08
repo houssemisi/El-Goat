@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter_application_1/screens/chat_page.dart';
 import 'package:flutter_application_1/screens/club_profil_page.dart';
+import 'package:flutter_application_1/screens/games_page.dart';
 import 'package:flutter_application_1/screens/profile_page.dart';
-import 'screens/home_page.dart' hide NewsPage;
+import 'package:flutter_application_1/screens/scout_profile_page.dart';
+import 'screens/home_page.dart';
 import 'screens/news_home_page.dart';
 import 'screens/accueil_page.dart';
 import 'screens/registration_page.dart';
@@ -41,6 +44,9 @@ class MyApp extends StatelessWidget {
         '/news_reels': (context) => const NewsReelsPage(), // Add this route
         '/profile': (context) => ProfilePage(),
         '/club_profile': (context) => const ClubProfilePage(),
+        '/scout_profile': (context) => const ScoutProfilePage(),
+        '/chat': (context) => const ChatScreen(),
+        '/games': (context) => const GamificationDashboard(),
       },
       builder: DevicePreview.appBuilder,
       locale: DevicePreview.locale(context),

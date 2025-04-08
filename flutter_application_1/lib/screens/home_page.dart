@@ -64,7 +64,11 @@ class _HomePageState extends State<HomePage> {
                 ),
                 style: const TextStyle(color: Colors.white),
               )
-            : const Text('El Goat'),
+            : Image.asset(
+                'assets/images/logo.png', // Replace with your logo image path
+                height: 40, // Set the height of the logo
+                width: 40, // Set the width of the logo
+              ),
         leading: IconButton(
           icon: const Icon(Icons.menu),
           onPressed: () {

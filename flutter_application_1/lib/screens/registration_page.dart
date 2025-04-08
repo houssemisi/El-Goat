@@ -74,7 +74,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               const SizedBox(height: 50),
               Center(
                 child: Image.asset(
-                  'assets/images/goat.png',
+                  'assets/images/logo.png',
                   height: 40,
                   width: 40,
                 ),

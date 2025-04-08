@@ -72,6 +72,14 @@ class _ProfilePageState extends State<ProfilePage> {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.message, color: Colors.white),
+            onPressed: () {
+              Navigator.pushNamed(context, '/chat'); // Navigate to ChatScreen
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -349,7 +357,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(
+              height: 5,
+              width: 15,
+            ),
             // My Journey Section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
