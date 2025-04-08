@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart'; // Import Firebase Realtime Database
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Authentication
 import '../screens/success_page.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 
@@ -18,8 +18,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _passwordController = TextEditingController();
   int _selectedIndex = 0;
 
-  final DatabaseReference _database =
-      FirebaseDatabase.instance.ref(); // Firebase Database reference
+  final FirebaseAuth _auth =
+      FirebaseAuth.instance; // Firebase Authentication instance
 
   @override
   void dispose() {
@@ -52,23 +52,22 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Save user data to Firebase
       try {
-        await _database.child('users').push().set({
-          'name': _nameController.text,
-          'email': _emailController.text,
-          'category': _selectedCategory,
-        });
+        // Create user with email and password
+        await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-        // Navigate to Success Page if the form is valid
+        // Navigate to Success Page if registration is successful
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const SuccessPage()),
         );
       } catch (e) {
-        // Handle errors (e.g., network issues)
+        // Handle errors (e.g., email already in use, weak password)
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving data: $e')),
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
     }

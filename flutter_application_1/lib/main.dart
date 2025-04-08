@@ -17,9 +17,9 @@ import 'screens/stories_page.dart';
 import 'screens/news_reels_page.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp(
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(DevicePreview(

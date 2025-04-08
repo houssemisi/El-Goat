@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Authentication
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,36 +11,11 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final DatabaseReference _database =
-      FirebaseDatabase.instance.ref(); // Firebase Database reference
-  List<String> _registeredEmails = []; // List to store registered emails
+  final FirebaseAuth _auth =
+      FirebaseAuth.instance; // Firebase Authentication instance
   bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchRegisteredEmails();
-  }
-
-  Future<void> _fetchRegisteredEmails() async {
-    try {
-      final snapshot = await _database.child('users').get();
-      if (snapshot.exists) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        setState(() {
-          _registeredEmails = data.values
-              .map((user) => user['email'] as String)
-              .toList(); // Extract emails
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching registered emails: $e')),
-      );
-    }
-  }
-
-  void _login() {
+  void _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
@@ -51,15 +26,22 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    if (!_registeredEmails.contains(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email not registered')),
-      );
-      return;
-    }
+    setState(() {
+      _isLoading = true;
+    });
 
-    // If email is valid, navigate to the home page
-    Navigator.pushNamed(context, '/');
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      Navigator.pushNamed(context, '/'); // Navigate to Home Page
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
