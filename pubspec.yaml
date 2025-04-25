@@ -1,0 +1,59 @@
+name: flutter_application_1
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  video_player: ^2.2.19
+  cupertino_icons: ^1.0.8
+  device_preview: ^1.2.0  # Updated version
+  lottie: ^2.2.0
+  firebase_core: 3.13.0
+  firebase_database: ^11.3.5
+  firebase_auth: ^5.5.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  image_picker: ^0.8.7+4
+
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/football_action.jpg
+    - assets/images/1.jpg
+    - assets/images/2.jpg
+    - assets/images/3.jpg
+    - assets/images/5.jpeg
+    - assets/images/dali.jpeg
+    - assets/images/cr7.jpeg
+    - assets/images/mb.jpeg
+    - assets/images/goat.png
+    - assets/images/football_field.jpeg
+    - assets/images/club_logo.jpeg
+    - assets/images/player1.jpeg
+    - assets/images/scout.jpeg
+    - assets/images/6.jpeg
+    - assets/images/7.jpeg
+    - assets/images/8.jpeg
+    - assets/images/9.jpeg
+    - assets/images/10.jpeg
+    - assets/images/11.jpeg
+    - assets/images/12.jpeg
+    - assets/images/13.jpeg
+    - assets/images/14.jpeg  
+    - assets/images/logo.png  
+    - assets/videos/football.mp4
+    - assets/videos/goal1.mp4
+    - assets/videos/goal2.mp4
+    - assets/videos/goal3.mp4
+    - assets/audio/
