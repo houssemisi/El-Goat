@@ -10,14 +10,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+<<<<<<< HEAD
   video_player: ^2.7.2
   chewie: ^1.7.0   # for fullscreen playback
+=======
+  video_player: ^2.2.19
+>>>>>>> 6cac91beaada61b3ffc53a7521518f9a73ed764c
   cupertino_icons: ^1.0.8
   device_preview: ^1.2.0  # Updated version
   lottie: ^2.2.0
   firebase_core: 3.13.0
   firebase_database: ^11.3.5
   firebase_auth: ^5.5.2
+<<<<<<< HEAD
   cloud_firestore: ^5.6.6
   flutter_secure_storage: ^5.0.2
   supabase_flutter: ^1.10.25
@@ -25,6 +30,8 @@ dependencies:
   image_picker: ^0.8.9
   path: ^1.8.3
   mime: ^1.0.4
+=======
+>>>>>>> 6cac91beaada61b3ffc53a7521518f9a73ed764c
 
 dev_dependencies:
   flutter_test:
@@ -59,9 +66,13 @@ flutter:
     - assets/images/12.jpeg
     - assets/images/13.jpeg
     - assets/images/14.jpeg  
+<<<<<<< HEAD
     - assets/images/logo.png
     - assets/images/gold_foil_texture.png
     - assets/images/club_logo.jpeg
+=======
+    - assets/images/logo.png  
+>>>>>>> 6cac91beaada61b3ffc53a7521518f9a73ed764c
     - assets/videos/football.mp4
     - assets/videos/goal1.mp4
     - assets/videos/goal2.mp4

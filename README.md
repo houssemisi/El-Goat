@@ -1,6 +1,9 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # El-Goat
 =======
+=======
+>>>>>>> 6cac91beaada61b3ffc53a7521518f9a73ed764c
 # flutter_application_1
 
 A new Flutter project.
@@ -17,4 +20,7 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+<<<<<<< HEAD
 >>>>>>> 6cac91b (Initial commit of Flutter app)
+=======
+>>>>>>> 6cac91beaada61b3ffc53a7521518f9a73ed764c
