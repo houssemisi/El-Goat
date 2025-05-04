@@ -1,219 +1,179 @@
+// lib/screens/club_profile_page.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
-import '../screens/chat_page.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const ClubProfilePage(),
-    );
-  }
-}
 
 class ClubProfilePage extends StatefulWidget {
   const ClubProfilePage({Key? key}) : super(key: key);
 
   @override
-  State<ClubProfilePage> createState() => _ClubProfilePageState();
+  _ClubProfilePageState createState() => _ClubProfilePageState();
 }
 
 class _ClubProfilePageState extends State<ClubProfilePage> {
-  int _selectedIndex = 0;
+  bool _loading = true;
+  Map<String, dynamic>? _profile;
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        Navigator.pushNamed(context, '/');
-        break;
-      case 1:
-        Navigator.pushNamed(context, '/stories');
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/news_reels');
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/profile');
-        break;
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
   }
 
-  Future<String> getCurrentUserRole() async {
-    final userId = Supabase.instance.client.auth.currentUser!.id;
+  Future<void> _loadProfile() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      // Not logged in
+      setState(() => _loading = false);
+      return;
+    }
 
-    final scout = await Supabase.instance.client
-        .from('scout_profiles')
-        .select()
-        .eq('user_id', userId)
-        .maybeSingle();
-    if (scout != null) return 'scout';
-
-    final footballer = await Supabase.instance.client
-        .from('footballer_profiles')
-        .select()
-        .eq('user_id', userId)
-        .maybeSingle();
-    if (footballer != null) return 'footballer';
-
-    final club = await Supabase.instance.client
+    final response = await Supabase.instance.client
         .from('club_profiles')
         .select()
         .eq('user_id', userId)
         .maybeSingle();
-    if (club != null) return 'club';
 
-    return 'normal';
+    if (response == null || response is! Map<String, dynamic>) {
+      // No profile
+      setState(() {
+        _profile = null;
+        _loading = false;
+      });
+    } else {
+      setState(() {
+        _profile = response;
+        _loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_profile == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Club Profile'),
+        ),
+        body: const Center(
+          child: Text('No profile found.'),
+        ),
+      );
+    }
+
+    final data = _profile!;
+    final clubName       = data['club_name'] as String? ?? '';
+    final location       = data['location'] as String? ?? '';
+    final website        = data['website'] as String? ?? '';
+    final description    = data['description'] as String? ?? '';
+
+    final playersCount   = data['players_count'] as int? ?? 0;
+    final titlesCount    = data['titles_count']  as int? ?? 0;
+    final recruitmentOpen= data['recruitment_open'] as bool? ?? false;
+    final positions      = (data['positions'] as List<dynamic>?)?.cast<String>() ?? [];
+    final criteria       = data['criteria'] as String? ?? '';
+    final announcements  = data['announcements'] as String? ?? '';
+    final events         = data['events'] as String? ?? '';
+
+    int _selectedIndex = 3;
+    void _onItemTapped(int idx) {
+      switch (idx) {
+        case 0: Navigator.pushNamed(context, '/'); break;
+        case 1: Navigator.pushNamed(context, '/stories'); break;
+        case 2: Navigator.pushNamed(context, '/news_home'); break;
+        case 3: break;
+      }
+      setState(() => _selectedIndex = idx);
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text(
-          "Profil du Club",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: Text(clubName, style: const TextStyle(color: Colors.white)),
         centerTitle: true,
-        actions: [
-          FutureBuilder<String>(
-            future: getCurrentUserRole(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data == 'normal') return const SizedBox();
-              return IconButton(
-                icon: const Icon(Icons.message, color: Colors.white),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(
-                        otherUserId: 'RECEIVER_ID_HERE',
-                        otherUserName: 'Receiver Name',
-                        otherUserImage: 'assets/images/player1.jpeg',
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Center(
               child: Column(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 50,
                     backgroundImage: AssetImage('assets/images/club_logo.jpeg'),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    "Paris FC",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text("25 joueurs sous contrat", style: TextStyle(color: Colors.grey)),
-                  const Text("5 titres remportés", style: TextStyle(color: Colors.grey)),
+                  Text(clubName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 6),
+                  Text('$playersCount players under contract', style: const TextStyle(color: Colors.grey)),
+                  Text('$titlesCount titles won', style: const TextStyle(color: Colors.grey)),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: Color.fromARGB(255, 2, 75, 235),
+                      foregroundColor: Colors.black,
                     ),
-                    child: const Text("S’ABONNER"),
+                    child: const Text('SUBSCRIBE'),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+
+            // Info sections
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Container(
-                    height: 200,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text("Informations Générales", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.yellow)),
-                          SizedBox(height: 10),
-                          Text("Localisation : Paris, France", style: TextStyle(color: Colors.white)),
-                          Text("Division actuelle : Ligue 2", style: TextStyle(color: Colors.white)),
-                          Text("Nombre de membres du staff : 15", style: TextStyle(color: Colors.white)),
-                          Text("Stade officiel : Stade Charléty (20,000 places)", style: TextStyle(color: Colors.white)),
-                          Text("Année de création : 1969", style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
+                  child: _buildInfoCard(
+                    title: 'General Info',
+                    children: [
+                      'Location: $location',
+                      'Website: $website',
+                      'Description: $description',
+                    ],
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Container(
-                    height: 200,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text("Statut de Recrutement", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.yellow)),
-                          SizedBox(height: 10),
-                          Text("Recherche de joueurs ?  Oui", style: TextStyle(color: Colors.white)),
-                          Text("Postes recherchés : Défenseur, Milieu, Attaquant", style: TextStyle(color: Colors.white)),
-                          Text("Critères : U18, semi-pro, pro", style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
+                  child: _buildInfoCard(
+                    title: 'Recruitment',
+                    children: [
+                      'Hiring? ${recruitmentOpen ? 'Yes' : 'No'}',
+                      'Positions: ${positions.join(', ')}',
+                      'Criteria: $criteria',
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 ),
-                child: const Text("Postuler"),
+                child: const Text('APPLY'),
               ),
             ),
-            const SizedBox(height: 20),
-            const Text("Dernières Nouvelles", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.yellow)),
-            const SizedBox(height: 10),
-            const Text("Annonces officielles : Match contre Lyon ce samedi.", style: TextStyle(color: Colors.white)),
-            const Text("Prochains événements : Essais ouverts le 15 avril.", style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 24),
+            const Text('Latest News', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.yellow)),
+            const SizedBox(height: 8),
+            Text(announcements, style: const TextStyle(color: Colors.white)),
+            Text(events, style: const TextStyle(color: Colors.white)),
           ],
         ),
       ),
@@ -223,4 +183,20 @@ class _ClubProfilePageState extends State<ClubProfilePage> {
       ),
     );
   }
+
+  Widget _buildInfoCard({required String title, required List<String> children}) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.grey[900], borderRadius: BorderRadius.circular(10)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.yellow)),
+          const SizedBox(height: 8),
+          ...children.map((c) => Text(c, style: const TextStyle(color: Colors.white))),
+        ],
+      ),
+    );
+  }
 }
+

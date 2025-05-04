@@ -270,14 +270,14 @@ class _HomePageState extends State<HomePage> {
                       icon: Icons.person,
                       title: 'Footballer',
                       onTap: () {
-                        Navigator.pushNamed(context, '/signup/footballer');
+                        Navigator.pushNamed(context, '/footballer_profile');
                       },
                     ),
                     SignupOption(
                       icon: Icons.groups,
                       title: 'Scout',
                       onTap: () {
-                        Navigator.pushNamed(context, '/signup/scout');
+                        Navigator.pushNamed(context, '/scout_profile');
                       },
                     ),
                     SignupOption(

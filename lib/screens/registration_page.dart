@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/clubsigup_page.dart';
 import '../screens/scoutsignup_page.dart';
 import '../screens/footballersignup_page.dart';
-import '../screens/success_page.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 
 class RegistrationPage extends StatefulWidget {
@@ -62,15 +61,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
       final insertResp = await Supabase.instance.client
           .from(tableName)
           .insert({
-            'user_id':   userId,
-            'name':      _nameController.text.trim(),
+            'user_id': userId,
+            'name': _nameController.text.trim(),
             'last_seen': DateTime.now().toIso8601String(),
           });
       if (insertResp.error != null) {
         throw insertResp.error!;
       }
 
-      // 3️⃣ Navigate to the correct form page
+      // 3️⃣ Navigate to the correct form page based on the selected category
       Widget nextPage;
       switch (_selectedCategory) {
         case 'Club':
@@ -83,7 +82,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           nextPage = FootballerSignUpPage(userId: userId);
           break;
         default:
-          nextPage = const SuccessPage();
+          throw Exception('Invalid category selected');
       }
 
       Navigator.pushReplacement(
@@ -91,9 +90,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         MaterialPageRoute(builder: (_) => nextPage),
       );
     } catch (err) {
-      final message = (err is AuthException)
-          ? err.message
-          : err.toString();
+      final message = (err is AuthException) ? err.message : err.toString();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $message')),
       );
