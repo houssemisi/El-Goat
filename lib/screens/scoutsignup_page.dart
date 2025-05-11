@@ -1,3 +1,6 @@
+// Updated scout signup page for multiple profiles per user
+// Allows inserting multiple scout profiles for the same user
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'success_page.dart';
@@ -13,30 +16,19 @@ class ScoutSignUpPage extends StatefulWidget {
 class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
+  final _supabase = Supabase.instance.client;
 
-  // Controllers for form fields
-  final _fullNameCtrl        = TextEditingController();
-  final _phoneCtrl           = TextEditingController();
-  final _cityCtrl            = TextEditingController();
+  final _fullNameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
   final _experienceYearsCtrl = TextEditingController();
-  final _bioCtrl             = TextEditingController();
+  final _bioCtrl = TextEditingController();
 
-  // Dropdown selections
   String? _selectedCountry;
   String? _selectedScoutingLevel;
 
-  // Predefined lists
-  final List<String> _countries = [
-    'Tunisia','Algeria','Morocco','Egypt','Sudan','Libya','South Africa','Nigeria',
-    'Kenya','Ghana','Mali','Cameroon','Togo','Burkina Faso','Uganda','Zambia',
-    'Zimbabwe','Namibia','Botswana','Rwanda','Congo','Gabon','Angola','Tanzania',
-    'Ethiopia','Somalia','Djibouti','Mauritius','Seychelles','United States',
-    'United Kingdom','France','Germany','Spain','Italy','Portugal','Netherlands',
-    'Belgium','Sweden','Norway','Finland','Denmark','Russia','India','Pakistan',
-    'Bangladesh','Sri Lanka','Indonesia','Malaysia','Philippines','Vietnam',
-    'Australia','Japan','China','Brazil'
-  ];
-  final List<String> _scoutingLevels = ['Local','National','International'];
+  final List<String> _countries = ['Tunisia', 'Algeria', 'Morocco'];
+  final List<String> _scoutingLevels = ['Local', 'National', 'International'];
 
   @override
   void dispose() {
@@ -50,38 +42,80 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isSaving = true);
 
-    final profile = {
-      'user_id':          widget.userId,
-      'full_name':        _fullNameCtrl.text.trim(),
-      'phone':            _phoneCtrl.text.trim(),
-      'country':          _selectedCountry,
-      'city':             _cityCtrl.text.trim(),
-      'scouting_level':   _selectedScoutingLevel,
-      'years_experience': int.parse(_experienceYearsCtrl.text.trim()),
-      'bio':              _bioCtrl.text.trim(),
-      'last_seen':        DateTime.now().toIso8601String(),
-    };
+    try {
+      final profile = {
+        'user_id': widget.userId,
+        'full_name': _fullNameCtrl.text.trim(),
+        'phone': _phoneCtrl.text.trim(),
+        'country': _selectedCountry,
+        'city': _cityCtrl.text.trim(),
+        'scouting_level': _selectedScoutingLevel,
+        'years_experience': int.parse(_experienceYearsCtrl.text.trim()),
+        'bio': _bioCtrl.text.trim(),
+        'last_seen': DateTime.now().toIso8601String(),
+      };
 
-    final res = await Supabase.instance.client
-        .from('scout_profiles')
-        .update(profile)
-        .eq('user_id', widget.userId);
+      await _supabase
+          .from('scout_profiles')
+          .insert(profile);
 
-    if (res.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(res.error!.message)),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SuccessPage()),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SuccessPage()),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${error.toString()}'), backgroundColor: Colors.red),
+        );
+        debugPrint('Supabase error: $error');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
-
-    setState(() => _isSaving = false);
   }
+
+  Widget _buildLabel(String text) => Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 4),
+        child: Text(text, style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500)),
+      );
+
+  Widget _buildTextField(String hint, TextEditingController controller, {TextInputType keyboard = TextInputType.text, String? Function(String?)? validator}) =>
+      TextFormField(
+        controller: controller,
+        style: const TextStyle(color: Colors.white),
+        keyboardType: keyboard,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey[800],
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.grey),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        ),
+        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
+      );
+
+  Widget _buildDropdown(List<String> items, String? value, void Function(String?) onChanged) =>
+      DropdownButtonFormField<String>(
+        value: value,
+        dropdownColor: Colors.grey[900],
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey[800],
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        ),
+        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        onChanged: onChanged,
+        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -109,20 +143,12 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                   const Center(
                     child: Text(
                       'Complete Scout Profile',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Full Name
                   _buildLabel('Full Name'),
                   _buildTextField('Enter your full name', _fullNameCtrl),
-
-                  // Phone Number
                   _buildLabel('Phone Number'),
                   _buildTextField(
                     'Enter phone',
@@ -131,33 +157,17 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     validator: (v) {
                       final val = v!.trim();
                       if (!RegExp(r'^\d{8,15}\$').hasMatch(val)) {
-                        return '8–15 digits';
+                        return 'Enter 8–15 digits';
                       }
                       return null;
                     },
                   ),
-
-                  // Country
                   _buildLabel('Country'),
-                  _buildDropdown(
-                    _countries,
-                    _selectedCountry,
-                    (val) => setState(() => _selectedCountry = val),
-                  ),
-
-                  // City
+                  _buildDropdown(_countries, _selectedCountry, (val) => setState(() => _selectedCountry = val)),
                   _buildLabel('City'),
                   _buildTextField('Enter your city', _cityCtrl),
-
-                  // Scouting Level
                   _buildLabel('Scouting Level'),
-                  _buildDropdown(
-                    _scoutingLevels,
-                    _selectedScoutingLevel,
-                    (val) => setState(() => _selectedScoutingLevel = val),
-                  ),
-
-                  // Years of Experience
+                  _buildDropdown(_scoutingLevels, _selectedScoutingLevel, (val) => setState(() => _selectedScoutingLevel = val)),
                   _buildLabel('Years of Experience'),
                   _buildTextField(
                     'Enter years',
@@ -171,8 +181,6 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                       return null;
                     },
                   ),
-
-                  // Bio
                   _buildLabel('Bio'),
                   TextFormField(
                     controller: _bioCtrl,
@@ -181,16 +189,10 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey[800],
-                      hintText: 'Write a short bio...',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
+                      hintText: 'Write a short bio...'
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
-
                   const SizedBox(height: 30),
                   SizedBox(
                     width: double.infinity,
@@ -205,10 +207,7 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
                       ),
                       child: _isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Save & Continue',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
-                            ),
+                          : const Text('Save & Continue', style: TextStyle(color: Colors.white, fontSize: 18)),
                     ),
                   ),
                 ],
@@ -219,50 +218,4 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
       ),
     );
   }
-
-  Widget _buildLabel(String text) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 4),
-        child: Text(text, style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500)),
-      );
-
-  // TextField builder with hint, controller, optional keyboard & validator
-  Widget _buildTextField(
-    String hint,
-    TextEditingController controller,
-    {
-      TextInputType keyboard = TextInputType.text,
-      String? Function(String?)? validator,
-    }
-  ) => TextFormField(
-        controller: controller,
-        style: const TextStyle(color: Colors.white),
-        keyboardType: keyboard,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
-
-  // Dropdown builder
-  Widget _buildDropdown(
-    List<String> items,
-    String? value,
-    void Function(String?) onChanged,
-  ) => DropdownButtonFormField<String>(
-        value: value,
-        dropdownColor: Colors.grey[900],
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
-        validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
 }

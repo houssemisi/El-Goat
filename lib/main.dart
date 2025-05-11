@@ -21,6 +21,7 @@ import 'screens/footballersignup_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/notifications_page.dart';
 import 'screens/ratings_page.dart';
+import 'screens/login_required_page.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -80,17 +81,14 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.light,
       initialRoute: '/',
       routes: {
-        '/': (ctx) => const HomePage(),
+        '/': (context) => const HomePage(),
         '/news_home': (ctx) => NewsHomePage(toggleTheme: () {}),
         '/stories': (ctx) => const StoriesPage(),
         '/news_reels': (ctx) => const NewsReelsPage(),
         '/registration': (ctx) => const RegistrationPage(),
         '/login': (ctx) => const LoginPage(),
         '/accueil': (ctx) => const AcceuilPage(),
-        '/profile': (ctx) => FootballerProfilePage(
-              userId: Supabase.instance.client.auth.currentUser!.id,
-              userName: Supabase.instance.client.auth.currentUser!.userMetadata?['name'] ?? 'Unknown',
-              userImage: Supabase.instance.client.auth.currentUser!.userMetadata?['image'] ?? '',
+        '/profile': (ctx) => FootballerProfilePage(  
             ),
         '/scout_profile': (ctx) => const ScoutProfilePage(),
         '/club_profile': (ctx) => ClubProfilePage(
@@ -114,6 +112,7 @@ class MyApp extends StatelessWidget {
         '/favorites': (ctx) => const FavoritesPage(),
         '/notifications': (ctx) => const NotificationsPage(),
         '/ratings': (ctx) => const RatingsPage(),
+        '/login_required': (ctx) => const LoginRequiredPage(),
       },
       builder: DevicePreview.appBuilder,
       locale: DevicePreview.locale(context),

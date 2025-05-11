@@ -1,3 +1,5 @@
+// lib/screens/footballersignup_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/success_page.dart';
@@ -13,16 +15,21 @@ class FootballerSignUpPage extends StatefulWidget {
 class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
+  final _supabase = Supabase.instance.client;
 
-  // Controllers
-  final _fullNameCtrl = TextEditingController();
-  final _phoneCtrl    = TextEditingController();
-  final _dobCtrl      = TextEditingController();
-  final _heightCtrl   = TextEditingController();
-  final _weightCtrl   = TextEditingController();
-  final _clubCtrl     = TextEditingController();
+  String _convertDateFormat(String dateStr) {
+    final parts = dateStr.split('/');
+    if (parts.length != 3) return dateStr;
+    return '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
+  }
 
-  // Dropdown selections
+  final TextEditingController _fullNameCtrl = TextEditingController();
+  final TextEditingController _phoneCtrl = TextEditingController();
+  final TextEditingController _dobCtrl = TextEditingController();
+  final TextEditingController _heightCtrl = TextEditingController();
+  final TextEditingController _weightCtrl = TextEditingController();
+  final TextEditingController _clubCtrl = TextEditingController();
+
   String? position;
   String? foot;
   String? experience;
@@ -38,44 +45,142 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
     super.dispose();
   }
 
+  Future<void> _selectDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+      firstDate: DateTime(1940),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.redAccent,
+              onPrimary: Colors.white,
+              surface: Color(0xFF2C2C2C),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dobCtrl.text = "${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}";
+      });
+    }
+  }
+
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isSaving = true);
 
-    final profile = {
-      'user_id':          widget.userId,
-      'full_name':        _fullNameCtrl.text.trim(),
-      'phone':            _phoneCtrl.text.trim(),
-      'dob':              _dobCtrl.text.trim(),
-      'position':         position,
-      'preferred_foot':   foot,
-      'height_cm':        int.parse(_heightCtrl.text.trim()),
-      'weight_kg':        int.parse(_weightCtrl.text.trim()),
-      'experience_level': experience,
-      'current_club':     _clubCtrl.text.trim().isEmpty
-                            ? 'None'
-                            : _clubCtrl.text.trim(),
-      'last_seen':        DateTime.now().toIso8601String(),
-    };
+    try {
+      final String dobFormatted = _convertDateFormat(_dobCtrl.text.trim());
 
-    final res = await Supabase.instance.client
-        .from('footballer_profiles')
-        .update(profile)
-        .eq('user_id', widget.userId);
+      final profile = {
+        'user_id': widget.userId,
+        'full_name': _fullNameCtrl.text.trim(),
+        'phone': _phoneCtrl.text.trim(),
+        'dob': dobFormatted,
+        'position': position,
+        'preferred_foot': foot,
+        'height_cm': int.parse(_heightCtrl.text.trim()),
+        'weight_kg': int.parse(_weightCtrl.text.trim()),
+        'experience_level': experience,
+        'current_club': _clubCtrl.text.trim().isEmpty ? 'None' : _clubCtrl.text.trim(),
+        'last_seen': DateTime.now().toIso8601String(),
+      };
 
-    if (res.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(res.error!.message)),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SuccessPage()),
-      );
+      // Insert the data allowing multiple rows
+      await _supabase
+          .from('footballer_profiles')
+          .insert(profile);
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SuccessPage()),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${error.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        debugPrint('Supabase error: $error');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
-
-    setState(() => _isSaving = false);
   }
+
+  Widget _buildLabel(String text) => Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 4),
+        child: Text(
+          text,
+          style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500),
+        ),
+      );
+
+  Widget _buildTextField(
+    String hint,
+    TextEditingController ctrl, {
+    TextInputType keyboard = TextInputType.text,
+    IconData? prefixIcon,
+    bool readOnly = false,
+    VoidCallback? onTap,
+    String? Function(String?)? validator,
+  }) =>
+      TextFormField(
+        controller: ctrl,
+        style: const TextStyle(color: Colors.white),
+        keyboardType: keyboard,
+        readOnly: readOnly,
+        onTap: onTap,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey[800],
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.grey),
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey) : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
+      );
+
+  Widget _buildDropdown(
+    List<String> items,
+    String? value,
+    void Function(String?) onChanged,
+  ) =>
+      DropdownButtonFormField<String>(
+        value: value,
+        dropdownColor: Colors.grey[900],
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey[800],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+        ),
+        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        onChanged: onChanged,
+        validator: (v) => (v == null || v.isEmpty) ? 'Please select' : null,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +188,7 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
       backgroundColor: const Color(0xFF1E1E1E),
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Footballer Profile'),
+        title: const Text('Complete Footballer Profile'),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -111,16 +216,8 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // Full Name
                   _buildLabel('Full Name'),
-                  _buildTextField(
-                    'Enter your full name',
-                    _fullNameCtrl,
-                    validator: (v) => v!.trim().isEmpty ? 'Required' : null,
-                  ),
-
-                  // Phone
+                  _buildTextField('Enter your full name', _fullNameCtrl),
                   _buildLabel('Phone Number'),
                   _buildTextField(
                     'Enter phone',
@@ -128,54 +225,38 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                     keyboard: TextInputType.phone,
                     validator: (v) {
                       final val = v!.trim();
-                      if (!RegExp(r'^\d{8,15}\$').hasMatch(val)) {
+                      if (!RegExp(r'^\d{8,15}$').hasMatch(val)) {
                         return 'Enter 8–15 digits';
                       }
                       return null;
                     },
                   ),
-
-                  // DOB
                   _buildLabel('Date of Birth'),
                   _buildTextField(
                     'DD/MM/YYYY',
                     _dobCtrl,
-                    keyboard: TextInputType.datetime,
                     prefixIcon: Icons.calendar_today,
+                    readOnly: true,
+                    onTap: _selectDate,
                     validator: (v) {
                       final val = v!.trim();
-                      if (!RegExp(r'^\d{2}/\d{2}/\d{4}\$').hasMatch(val)) {
+                      if (!RegExp(r'^\d{2}/\d{2}/\d{4}$').hasMatch(val)) {
                         return 'Use DD/MM/YYYY';
                       }
                       final parts = val.split('/');
-                      final day = int.parse(parts[0]);
-                      final month = int.parse(parts[1]);
-                      final year = int.parse(parts[2]);
-                      final date = DateTime.tryParse("\$year-\${month.toString().padLeft(2,'0')}-\${day.toString().padLeft(2,'0')}");
+                      final iso = '${parts[2]}-${parts[1].padLeft(2,'0')}-${parts[0].padLeft(2,'0')}';
+                      final date = DateTime.tryParse(iso);
                       if (date == null) return 'Invalid date';
                       final age = DateTime.now().difference(date).inDays ~/ 365;
                       if (age < 10 || age > 80) return 'Age 10–80 only';
                       return null;
                     },
                   ),
-
-                  // Position dropdown
                   _buildLabel('Position'),
-                  _buildDropdown(
-                    ['Goalkeeper','Defender','Midfielder','Striker'],
-                    position,
-                    (val) => setState(() => position = val),
-                  ),
-
-                  // Preferred foot
+                  _buildDropdown(['Goalkeeper', 'Defender', 'Midfielder', 'Striker'], position,
+                      (val) => setState(() => position = val)),
                   _buildLabel('Preferred Foot'),
-                  _buildDropdown(
-                    ['Left','Right','Both'],
-                    foot,
-                    (val) => setState(() => foot = val),
-                  ),
-
-                  // Height
+                  _buildDropdown(['Left', 'Right', 'Both'], foot, (val) => setState(() => foot = val)),
                   _buildLabel('Height (cm)'),
                   _buildTextField(
                     'Enter height',
@@ -189,8 +270,6 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                       return null;
                     },
                   ),
-
-                  // Weight
                   _buildLabel('Weight (kg)'),
                   _buildTextField(
                     'Enter weight',
@@ -204,23 +283,11 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                       return null;
                     },
                   ),
-
-                  // Experience
                   _buildLabel('Experience Level'),
-                  _buildDropdown(
-                    ['Beginner','Semi-Pro','Professional'],
-                    experience,
-                    (val) => setState(() => experience = val),
-                  ),
-
-                  // Club optional
+                  _buildDropdown(['Beginner', 'Semi-Pro', 'Professional'], experience,
+                      (val) => setState(() => experience = val)),
                   _buildLabel('Current Club (Optional)'),
-                  _buildTextField(
-                    'Enter club name',
-                    _clubCtrl,
-                    validator: (v) => null,
-                  ),
-
+                  _buildTextField('Enter club name', _clubCtrl, validator: (_) => null),
                   const SizedBox(height: 30),
                   SizedBox(
                     width: double.infinity,
@@ -235,10 +302,7 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
                       ),
                       child: _isSaving
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Save & Continue',
-                              style: TextStyle(color: Colors.white, fontSize: 18),
-                            ),
+                          : const Text('Save & Continue', style: TextStyle(color: Colors.white, fontSize: 18)),
                     ),
                   ),
                 ],
@@ -249,48 +313,4 @@ class _FootballerSignUpPageState extends State<FootballerSignUpPage> {
       ),
     );
   }
-
-  Widget _buildLabel(String text) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 4),
-        child: Text(text, style: TextStyle(color: Colors.grey[300], fontWeight: FontWeight.w500)),
-      );
-
-  Widget _buildTextField(
-    String hint,
-    TextEditingController ctrl, {
-    TextInputType keyboard = TextInputType.text,
-    IconData? prefixIcon,
-    String? Function(String?)? validator,
-  }) => TextFormField(
-        controller: ctrl,
-        style: const TextStyle(color: Colors.white),
-        keyboardType: keyboard,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.grey),
-          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey) : null,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-        validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
-      );
-
-  Widget _buildDropdown(
-    List<String> items,
-    String? value,
-    void Function(String?) onChanged,
-  ) => DropdownButtonFormField<String>(
-        value: value,
-        dropdownColor: Colors.grey[900],
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.grey[800],
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
-        validator: (v) => (v == null || v.isEmpty) ? 'Please select' : null,
-      );
 }

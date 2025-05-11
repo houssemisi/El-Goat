@@ -1,8 +1,10 @@
+// lib/screens/registration_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../screens/clubsigup_page.dart';
-import '../screens/scoutsignup_page.dart';
-import '../screens/footballersignup_page.dart';
+import 'clubsigup_page.dart';
+import 'scoutsignup_page.dart';
+import 'footballersignup_page.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 
 class RegistrationPage extends StatefulWidget {
@@ -13,13 +15,13 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  final _formKey         = GlobalKey<FormState>();
-  final _nameController  = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _formKey           = GlobalKey<FormState>();
+  final _nameController    = TextEditingController();
+  final _emailController   = TextEditingController();
+  final _passwordController= TextEditingController();
   String? _selectedCategory;
-  bool _isLoading = false;
-  int  _navIndex  = 0;
+  bool   _isLoading        = false;
+  int    _navIndex         = 0;
 
   @override
   void dispose() {
@@ -32,7 +34,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
   void _onNavTapped(int index) {
     setState(() => _navIndex = index);
     const routes = ['/', '/stories', '/news_home', '/profile'];
-    if (index < routes.length) Navigator.pushNamed(context, routes[index]);
+    if (index < routes.length) {
+      Navigator.pushNamed(context, routes[index]);
+    }
   }
 
   Future<void> _submitForm() async {
@@ -46,54 +50,65 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() => _isLoading = true);
 
     try {
+      final supabase = Supabase.instance.client;
+
       // 1️⃣ Sign up with Supabase Auth
-      final AuthResponse res = await Supabase.instance.client.auth.signUp(
+      final AuthResponse res = await supabase.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
       if (res.session == null || res.user == null) {
-        throw AuthException('Sign-up failed: No session or user returned');
+        throw AuthException('Sign-up failed: no session/user returned');
       }
       final userId = res.user!.id;
 
-      // 2️⃣ Insert minimal profile row
+      // 2️⃣ Insert base profile in the correct table
       final tableName = '${_selectedCategory!.toLowerCase()}_profiles';
-      final insertResp = await Supabase.instance.client
+      final insertResp = await supabase
           .from(tableName)
           .insert({
             'user_id': userId,
-            'name': _nameController.text.trim(),
-            'last_seen': DateTime.now().toIso8601String(),
-          });
-      if (insertResp.error != null) {
-        throw insertResp.error!;
+            'full_name': _nameController.text.trim(),
+            'created_at': DateTime.now().toIso8601String(),
+          })
+          .select();
+
+      if (insertResp.isEmpty) {
+        throw Exception('Profile insert failed.');
       }
 
-      // 3️⃣ Navigate to the correct form page based on the selected category
-      Widget nextPage;
-      switch (_selectedCategory) {
-        case 'Club':
-          nextPage = ClubSignUpPage(userId: userId);
-          break;
-        case 'Scout':
-          nextPage = ScoutSignUpPage(userId: userId);
-          break;
-        case 'Footballer':
+      // 3️⃣ Insert the user's role into the `user_roles` table
+      await supabase.from('user_roles').insert({
+        'user_id': userId,
+        'role': _selectedCategory!.toLowerCase(),
+      });
+
+      // 4️⃣ Navigate to the role-specific sign-up form
+      late Widget nextPage;
+      switch (_selectedCategory!.toLowerCase()) {
+        case 'footballer':
           nextPage = FootballerSignUpPage(userId: userId);
           break;
+        case 'scout':
+          nextPage = ScoutSignUpPage(userId: userId);
+          break;
+        case 'club':
+          nextPage = ClubSignUpPage(userId: userId);
+          break;
         default:
-          throw Exception('Invalid category selected');
+          throw Exception('Unknown category');
       }
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => nextPage),
       );
+    } on AuthException catch (err) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(err.message)));
     } catch (err) {
-      final message = (err is AuthException) ? err.message : err.toString();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $message')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $err')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -134,20 +149,39 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 40),
                   Image.asset('assets/images/logo.png', height: 40, width: 40),
                   const SizedBox(height: 20),
-                  const Text('Welcome to', style: TextStyle(color: Colors.white, fontSize: 20)),
-                  const Text('GOAT', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Welcome to',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                  const Text(
+                    'GOAT',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(context, '/login'),
-                        child: const Text('Login', style: TextStyle(color: Colors.white, fontSize: 18)),
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
                       ),
                       const VerticalDivider(color: Colors.white),
-                      const Text('Sign up', style: TextStyle(color: Colors.white, fontSize: 18)),
+                      const Text(
+                        'Sign up',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
                       const SizedBox(width: 6),
-                      const CircleAvatar(radius: 4, backgroundColor: Colors.yellow),
+                      const CircleAvatar(
+                        radius: 4,
+                        backgroundColor: Colors.yellow,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 30),
@@ -157,7 +191,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     controller: _nameController,
                     decoration: _inputDecoration('Full Name', Icons.person),
                     style: const TextStyle(color: Colors.white),
-                    validator: (v) => (v ?? '').isEmpty ? 'Enter your name' : null,
+                    validator: (v) =>
+                        (v ?? '').isEmpty ? 'Enter your name' : null,
                   ),
                   const SizedBox(height: 20),
 
@@ -168,7 +203,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     style: const TextStyle(color: Colors.white),
                     validator: (v) {
                       if ((v ?? '').isEmpty) return 'Enter your email';
-                      return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v!) ? null : 'Invalid email';
+                      final re = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                      return re.hasMatch(v!) ? null : 'Invalid email';
                     },
                   ),
                   const SizedBox(height: 20),
@@ -179,7 +215,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     obscureText: true,
                     decoration: _inputDecoration('Password', Icons.lock),
                     style: const TextStyle(color: Colors.white),
-                    validator: (v) => (v ?? '').length < 8 ? 'Password min 8 chars' : null,
+                    validator: (v) =>
+                        (v ?? '').length < 8 ? 'Password min 8 chars' : null,
                   ),
                   const SizedBox(height: 20),
 
@@ -195,9 +232,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ),
                     dropdownColor: Colors.grey[800],
                     value: _selectedCategory,
-                    hint: const Text('Category', style: TextStyle(color: Colors.white54)),
+                    hint: const Text(
+                      'Category',
+                      style: TextStyle(color: Colors.white54),
+                    ),
                     items: ['Footballer', 'Scout', 'Club']
-                        .map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(color: Colors.white))))
+                        .map((c) => DropdownMenuItem(
+                              value: c,
+                              child: Text(c,
+                                  style: const TextStyle(color: Colors.white)),
+                            ))
                         .toList(),
                     onChanged: (v) => setState(() => _selectedCategory = v),
                     validator: (v) => v == null ? 'Select category' : null,
@@ -209,12 +253,23 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     onPressed: _isLoading ? null : _submitForm,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 15),
                     ),
                     child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.black)
-                        : const Text('Sign up', style: TextStyle(color: Colors.black, fontSize: 18)),
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child:
+                                CircularProgressIndicator(color: Colors.black),
+                          )
+                        : const Text(
+                            'Sign up',
+                            style:
+                                TextStyle(color: Colors.black, fontSize: 18),
+                          ),
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -223,7 +278,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavbar(selectedIndex: _navIndex, onItemTapped: _onNavTapped),
+      bottomNavigationBar:
+          BottomNavbar(selectedIndex: _navIndex, onItemTapped: _onNavTapped),
     );
   }
 }

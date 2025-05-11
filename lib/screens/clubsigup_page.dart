@@ -1,4 +1,5 @@
-// lib/screens/clubsignup_page.dart
+// Updated ClubSignUpPage to support multiple profiles per user
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'success_page.dart';
@@ -18,6 +19,7 @@ class _ClubSignUpPageState extends State<ClubSignUpPage> {
   final _websiteCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
   bool _isSaving = false;
+  final _supabase = Supabase.instance.client;
 
   @override
   void dispose() {
@@ -30,37 +32,40 @@ class _ClubSignUpPageState extends State<ClubSignUpPage> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isSaving = true);
 
     try {
-      await Supabase.instance.client
+      final user = _supabase.auth.currentUser;
+      final response = await _supabase
           .from('club_profiles')
           .insert({
             'user_id': widget.userId,
+            'email': user?.email,
             'club_name': _clubNameCtrl.text.trim(),
             'location': _locationCtrl.text.trim(),
-            'website': _websiteCtrl.text.trim().isEmpty
-                ? null
-                : _websiteCtrl.text.trim(),
+            'website': _websiteCtrl.text.trim().isEmpty ? null : _websiteCtrl.text.trim(),
             'description': _descriptionCtrl.text.trim(),
             'created_at': DateTime.now().toIso8601String(),
-          })
-          .execute();
+          });
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SuccessPage()),
-      );
-    } on PostgrestException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur : ${e.message}')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur inattendue : $e')),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SuccessPage()),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${error.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -94,7 +99,7 @@ class _ClubSignUpPageState extends State<ClubSignUpPage> {
                   validator: (v) {
                     if (v == null || v.isEmpty) return null;
                     final uri = Uri.tryParse(v);
-                    if (uri == null || !uri.hasAbsolutePath) return 'URL invalide';
+                    if (uri == null || !uri.isAbsolute) return 'URL invalide';
                     return null;
                   },
                 ),

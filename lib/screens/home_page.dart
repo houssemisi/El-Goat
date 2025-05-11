@@ -1,4 +1,6 @@
+// lib/screens/home_page.dart
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 
 class HomePage extends StatefulWidget {
@@ -9,387 +11,325 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const Color _accent = Color(0xFFFFD600);
   int _selectedIndex = 0;
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  void _onNavTapped(int idx) async {
+    setState(() => _selectedIndex = idx);
 
-    switch (index) {
-      case 0:
-        Navigator.pushNamed(context, '/');
-        break;
-      case 1:
-        Navigator.pushNamed(context, '/news_reels'); // Navigate to NewsPage
-        break;
-      case 2:
-        Navigator.pushNamed(context, '/news_home'); // Navigate to NewsHomePage
-        break;
-      case 3:
-        Navigator.pushNamed(context, '/profile'); // Navigate to Profile page
-        break;
+    if (idx == 3) { // Profile tab
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        Navigator.pushNamed(context, '/login_required');
+        return;
+      }
+
+      // Fetch the user's role
+      final roleResponse = await Supabase.instance.client
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (roleResponse == null || roleResponse['role'] == null) {
+        Navigator.pushNamed(context, '/login_required');
+        return;
+      }
+
+      final role = roleResponse['role'];
+
+      // Navigate to the appropriate profile page
+      switch (role) {
+        case 'footballer':
+          Navigator.pushNamed(context, '/footballer_profile');
+          break;
+        case 'scout':
+          Navigator.pushNamed(context, '/scout_profile');
+          break;
+        case 'club':
+          Navigator.pushNamed(context, '/club_profile');
+          break;
+        default:
+          Navigator.pushNamed(context, '/login_required');
+      }
+    } else {
+      const routes = ['/', '/stories', '/news_home', '/profile'];
+      if (idx < routes.length) Navigator.pushNamed(context, routes[idx]);
     }
-  }
-
-  bool _isSearching = false;
-  final TextEditingController _searchController = TextEditingController();
-
-  void _startSearch() {
-    setState(() {
-      _isSearching = true;
-    });
-  }
-
-  void _stopSearch() {
-    setState(() {
-      _isSearching = false;
-      _searchController.clear();
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-
     return Scaffold(
-      key: scaffoldKey,
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search...',
-                  border: InputBorder.none,
-                ),
-                style: const TextStyle(color: Colors.white),
-              )
-            : Image.asset(
-                'assets/images/logo.png', // Replace with your logo image path
-                height: 40, // Set the height of the logo
-                width: 40, // Set the width of the logo
-              ),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            scaffoldKey.currentState?.openDrawer();
-          },
-        ),
-        actions: [
-          _isSearching
-              ? IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _stopSearch,
-                )
-              : IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _startSearch,
-                ),
-        ],
-      ),
+      backgroundColor: Colors.black,
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
-          children: <Widget>[
+          children: [
             const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-              ),
-              child: Text(
-                'El Goat',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
-              ),
+              decoration: BoxDecoration(color: Colors.black87),
+              child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
             ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pushNamed(context, '/');
-              },
+              leading: const Icon(Icons.home, color: Colors.white),
+              title: const Text('Home', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pushReplacementNamed(context, '/'),
             ),
             ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              leading: const Icon(Icons.book, color: Colors.white),
+              title: const Text('Stories', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pushReplacementNamed(context, '/stories'),
             ),
             ListTile(
-              leading: const Icon(Icons.contact_mail),
-              title: const Text('Contact'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              leading: const Icon(Icons.article, color: Colors.white),
+              title: const Text('News', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pushReplacementNamed(context, '/news_home'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person, color: Colors.white),
+              title: const Text('Profile', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.pushReplacementNamed(context, '/profile'),
             ),
           ],
         ),
       ),
-      body: Stack(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () => Navigator.pushNamed(context, '/search'),
+          ),
+        ],
+      ),
+      body: Column(
         children: [
-          // Curved Background
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: CustomPaint(
-              size: const Size(double.infinity, 200),
-              painter: CurvedPainter(),
+          // Logo + Login/Sign Up Row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                // Your logo
+                Image.asset('assets/images/logo.png', height: 40),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/login'),
+                  child: const Text('Login', style: TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => Navigator.pushNamed(context, '/registration'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  ),
+                  child: const Text('Sign Up', style: TextStyle(color: Colors.black)),
+                ),
+              ],
             ),
           ),
-          // Main Content
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Welcome to El Goat',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- Explore Stories ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Explore Stories',
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.search),
-                        onPressed: () {},
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                // Auth Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(color: Colors.white),
-                        ),
-                      ),
-                      child: const Text('Login'),
-                    ),
-                    const SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/registration');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.black,
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text('Sign up'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 48),
-                // Explore Stories Container
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, '/stories');
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.blue.shade900, Colors.blue.shade700],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.shade900.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'Explore Stories',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: 5,
+                      itemBuilder: (_, i) => Container(
+                        margin: const EdgeInsets.only(right: 12),
+                        width: 80,
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 32,
+                              backgroundImage: AssetImage('assets/images/${i+1}.jpg'),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Discover amazing football journeys',
-                            style: TextStyle(
-                              color: Colors.blue.shade100,
-                              fontSize: 16,
+                            const SizedBox(height: 6),
+                            Text(
+                              'Story ${i+1}',
+                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: Colors.blue.shade100,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 48),
-                // Join As Section
-                const Text(
-                  'Join as',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+
+                  const SizedBox(height: 24),
+                  // --- Join as ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Join as',
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    SignupOption(
-                      icon: Icons.person,
-                      title: 'Footballer',
-                      onTap: () {
-                        Navigator.pushNamed(context, '/footballer_profile');
-                      },
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        _RoleCard(
+                          icon: Icons.sports_soccer,
+                          label: 'Footballer',
+                          onTap: () => Navigator.pushNamed(context, '/footballersignup'),
+                        ),
+                        const SizedBox(width: 12),
+                        _RoleCard(
+                          icon: Icons.search,
+                          label: 'Scout',
+                          onTap: () => Navigator.pushNamed(context, '/scoutsignup'),
+                        ),
+                        const SizedBox(width: 12),
+                        _RoleCard(
+                          icon: Icons.business,
+                          label: 'Club',
+                          onTap: () => Navigator.pushNamed(context, '/clubsigup'),
+                        ),
+                      ],
                     ),
-                    SignupOption(
-                      icon: Icons.groups,
-                      title: 'Scout',
-                      onTap: () {
-                        Navigator.pushNamed(context, '/scout_profile');
-                      },
+                  ),
+
+                  const SizedBox(height: 24),
+                  // --- Featured Players ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Featured Players',
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    SignupOption(
-                      icon: Icons.business,
-                      title: 'Club',
-                      onTap: () {
-                        Navigator.pushNamed(context, '/club_profile');
-                      },
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: 8,
+                      itemBuilder: (_, i) => Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: GestureDetector(
+                          onTap: () =>
+                              Navigator.pushNamed(context, '/profile', arguments: {'id': '$i'}),
+                          child: CircleAvatar(
+                            radius: 40,
+                            backgroundImage: AssetImage('assets/images/player${i+1}.jpeg'),
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
+                  ),
+
+                  const SizedBox(height: 24),
+                  // --- Latest News ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Latest News',
+                      style: TextStyle(
+                        color: _accent,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...List.generate(3, (i) {
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                      leading: const Icon(Icons.article, color: Colors.white),
+                      title:
+                          Text('News Headline ${i+1}', style: const TextStyle(color: Colors.white)),
+                      subtitle: Text('Brief description…',
+                          style: TextStyle(color: Colors.grey[400])),
+                      onTap: () =>
+                          Navigator.pushNamed(context, '/news_detail', arguments: {'id': '$i'}),
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         ],
       ),
       bottomNavigationBar: BottomNavbar(
         selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+        onItemTapped: _onNavTapped,
       ),
     );
   }
 }
 
-class HomeContent extends StatelessWidget {
-  const HomeContent({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Home Page Content'),
-    );
-  }
-}
-
-class SignupOption extends StatelessWidget {
+class _RoleCard extends StatelessWidget {
   final IconData icon;
-  final String title;
+  final String label;
   final VoidCallback onTap;
-
-  const SignupOption({
+  const _RoleCard({
     Key? key,
     required this.icon,
-    required this.title,
+    required this.label,
     required this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1A1A1A),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 32,
-              color: Colors.white,
-            ),
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 36, color: Colors.white),
+              const SizedBox(height: 8),
+              Text(label, style: const TextStyle(color: Colors.white)),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class CurvedPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..color = const Color(0xFF1A1A1A)
-      ..style = PaintingStyle.fill;
-
-    var path = Path()
-      ..moveTo(0, 0)
-      ..quadraticBezierTo(size.width / 2, size.height, size.width, 0)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
-  }
-}
-
-class NewsPage extends StatelessWidget {
-  const NewsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('News Page'),
-      ),
-      body: const Center(
-        child: Text('News Page Content'),
+        ),
       ),
     );
   }

@@ -62,6 +62,14 @@ flutter:
     - assets/images/logo.png
     - assets/images/gold_foil_texture.png
     - assets/images/club_logo.jpeg
+    - assets/images/player2.jpeg
+    - assets/images/player3.jpeg
+    - assets/images/player4.jpeg
+    - assets/images/player5.jpeg
+    - assets/images/player6.jpeg
+    - assets/images/player7.jpeg
+    - assets/images/player_avatar.jpeg
+    - assets/images/player_avatar1.jpeg
     - assets/videos/football.mp4
     - assets/videos/goal1.mp4
     - assets/videos/goal2.mp4
