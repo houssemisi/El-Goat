@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navbar/bottom_navbar.dart';
 
 class NewsReelsPage extends StatefulWidget {
@@ -17,89 +18,254 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
     'assets/videos/football.mp4',
   ];
 
-  late PageController _pageController;
-  late VideoPlayerController _videoController;
-  int _currentIndex = 0; // Tracks the current video index
-  bool _isPlaying = true;
+  final PageController _pageController = PageController();
+  final List<VideoPlayerController> _controllers = [];
+
+  int _currentIndex = 0;
+  int _selectedIndex = 2;
   bool _isMuted = false;
-  bool _showPlayPauseButton =
-      false; // Tracks visibility of the play/pause button
-  int _selectedIndex = 2; // Default selected index for BottomNavbar
+
+  List<bool> isLiked = [];
+  List<int> likeCounts = [];
+  List<bool> showHeart = [];
+  List<List<String>> comments = [];
+
+  final TextEditingController _commentController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    _initializeVideoPlayer(0);
+    _initializeControllers();
+    isLiked = List.filled(videoUrls.length, false);
+    likeCounts = List.filled(videoUrls.length, 0);
+    showHeart = List.filled(videoUrls.length, false);
+    comments = List.generate(videoUrls.length, (_) => []);
+    _loadLikes();
+    _loadComments();
   }
 
   @override
   void dispose() {
-    _videoController.dispose();
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
     _pageController.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
-  void _initializeVideoPlayer(int index) {
-    _videoController = VideoPlayerController.asset(videoUrls[index])
-      ..initialize().then((_) {
-        setState(() {});
-        _videoController.play();
-        _videoController.setLooping(true);
+  Future<void> _initializeControllers() async {
+    for (final url in videoUrls) {
+      final controller = VideoPlayerController.asset(url);
+      await controller.initialize();
+      controller.setLooping(true);
+      controller.setVolume(_isMuted ? 0.0 : 1.0);
+      _controllers.add(controller);
+    }
+
+    _controllers[0].play();
+    setState(() {});
+  }
+
+  Future<void> _loadLikes() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    for (int i = 0; i < videoUrls.length; i++) {
+      final videoPath = videoUrls[i];
+
+      final res =
+          await supabase.from('likes').select().eq('video_path', videoPath);
+      likeCounts[i] = res.length;
+
+      if (user != null) {
+        final userLike = await supabase
+            .from('likes')
+            .select()
+            .eq('video_path', videoPath)
+            .eq('user_id', user.id);
+        isLiked[i] = userLike.isNotEmpty;
+      }
+    }
+
+    setState(() {});
+  }
+
+  Future<void> _loadComments() async {
+    final supabase = Supabase.instance.client;
+
+    for (int i = 0; i < videoUrls.length; i++) {
+      final video = videoUrls[i];
+
+      final res = await supabase
+          .from('comments')
+          .select('content')
+          .eq('video_path', video)
+          .order('created_at', ascending: true);
+
+      comments[i] = List<String>.from(res.map((e) => e['content']));
+    }
+
+    setState(() {});
+  }
+
+  Future<void> _handleLike(int index) async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    final videoPath = videoUrls[index];
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must be logged in to like')),
+      );
+      return;
+    }
+
+    setState(() {
+      isLiked[index] = !isLiked[index];
+      likeCounts[index] += isLiked[index] ? 1 : -1;
+    });
+
+    if (isLiked[index]) {
+      await supabase.from('likes').insert({
+        'user_id': user.id,
+        'video_path': videoPath,
       });
+    } else {
+      await supabase
+          .from('likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('video_path', videoPath);
+    }
   }
 
   void _onPageChanged(int index) {
     setState(() {
+      _controllers[_currentIndex].pause();
       _currentIndex = index;
+      _controllers[_currentIndex].play();
     });
-    _videoController.dispose();
-    _initializeVideoPlayer(index);
   }
 
   void _togglePlayPause() {
+    final controller = _controllers[_currentIndex];
     setState(() {
-      if (_videoController.value.isPlaying) {
-        _videoController.pause();
-        _isPlaying = false;
+      if (controller.value.isPlaying) {
+        controller.pause();
       } else {
-        _videoController.play();
-        _isPlaying = true;
+        controller.play();
       }
     });
   }
 
   void _toggleMute() {
     setState(() {
-      if (_isMuted) {
-        _videoController.setVolume(1.0);
-        _isMuted = false;
-      } else {
-        _videoController.setVolume(0.0);
-        _isMuted = true;
+      _isMuted = !_isMuted;
+      for (var controller in _controllers) {
+        controller.setVolume(_isMuted ? 0.0 : 1.0);
       }
     });
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
+    setState(() => _selectedIndex = index);
     switch (index) {
       case 0:
-        Navigator.pushNamed(context, '/'); // Navigate to Home
+        Navigator.pushNamed(context, '/');
         break;
       case 1:
-        Navigator.pushNamed(context, '/stories'); // Navigate to Stories
-        break;
-      case 2:
-        // Stay on NewsReelsPage
+        Navigator.pushNamed(context, '/stories');
         break;
       case 3:
-        Navigator.pushNamed(context, '/profile'); // Navigate to Profile
+        Navigator.pushNamed(context, '/profile');
         break;
     }
+  }
+
+  void _openCommentsSheet(int index) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.black87,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 10,
+            left: 16,
+            right: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Comments',
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: comments[index].length,
+                  itemBuilder: (context, i) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      comments[index][i],
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: 'Add a comment...',
+                        hintStyle: TextStyle(color: Colors.white70),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: () async {
+                      final comment = _commentController.text.trim();
+                      final supabase = Supabase.instance.client;
+                      final user = supabase.auth.currentUser;
+
+                      if (comment.isNotEmpty && user != null) {
+                        await supabase.from('comments').insert({
+                          'user_id': user.id,
+                          'video_path': videoUrls[index],
+                          'content': comment,
+                        });
+
+                        _commentController.clear();
+                        Navigator.pop(context);
+                        await _loadComments();
+                        _openCommentsSheet(index);
+                      } else if (user == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Please login to comment')),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -109,172 +275,107 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
         title: const Text('El Goat'),
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: () {
-            // Open drawer
-          },
+          onPressed: () {},
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () {
-              // Search functionality
-            },
+            onPressed: () {},
           ),
         ],
       ),
-      body: PageView.builder(
-        controller: _pageController,
-        scrollDirection: Axis.vertical,
-        onPageChanged: _onPageChanged,
-        itemCount: videoUrls.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _showPlayPauseButton = true;
-              });
-              Future.delayed(const Duration(seconds: 2), () {
-                setState(() {
-                  _showPlayPauseButton = false;
-                });
-              });
-            },
-            child: Stack(
-              children: [
-                // Video Player
-                SizedBox.expand(
-                  child: _videoController.value.isInitialized
-                      ? VideoPlayer(_videoController)
-                      : const Center(child: CircularProgressIndicator()),
-                ),
-                // Play/Pause Button
-                if (_showPlayPauseButton)
-                  Center(
-                    child: GestureDetector(
+      body: _controllers.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : PageView.builder(
+              controller: _pageController,
+              scrollDirection: Axis.vertical,
+              itemCount: _controllers.length,
+              onPageChanged: _onPageChanged,
+              itemBuilder: (context, index) {
+                final controller = _controllers[index];
+
+                return Stack(
+                  children: [
+                    GestureDetector(
                       onTap: _togglePlayPause,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(20),
-                        child: Icon(
-                          _isPlaying ? Icons.pause : Icons.play_arrow,
-                          color: Colors.white,
-                          size: 50,
-                        ),
-                      ),
-                    ),
-                  ),
-                // Mute/Unmute Button
-                Positioned(
-                  top: 20,
-                  right: 20,
-                  child: IconButton(
-                    icon: Icon(
-                      _isMuted ? Icons.volume_off : Icons.volume_up,
-                      color: Colors.white,
-                    ),
-                    onPressed: _toggleMute,
-                  ),
-                ),
-                // Interactive UI Elements
-                Positioned(
-                  bottom: 20,
-                  left: 10,
-                  right: 10,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Username and Caption
-                      const Text(
-                        '@Footballer123',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      const Text(
-                        'Amazing goal from last night\'s match! ⚽🔥',
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                      const SizedBox(height: 10),
-                      // Floating Action Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      onDoubleTap: () {
+                        if (!isLiked[index]) {
+                          _handleLike(index);
+                          setState(() => showHeart[index] = true);
+                          Future.delayed(const Duration(milliseconds: 800), () {
+                            setState(() => showHeart[index] = false);
+                          });
+                        }
+                      },
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.favorite,
-                                    color: Colors.red),
-                                onPressed: () {
-                                  // Handle like action
-                                },
-                              ),
-                              const Text(
-                                '1.2k',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
+                          SizedBox.expand(
+                            child: controller.value.isInitialized
+                                ? VideoPlayer(controller)
+                                : const Center(
+                                    child: CircularProgressIndicator()),
                           ),
-                          Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.comment,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  // Handle comment action
-                                },
-                              ),
-                              const Text(
-                                '300',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
+                          if (showHeart[index])
+                            const Icon(
+                              Icons.favorite,
+                              color: Colors.white,
+                              size: 100,
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    // Mute button
+                    Positioned(
+                      top: 20,
+                      right: 20,
+                      child: IconButton(
+                        icon: Icon(
+                          _isMuted ? Icons.volume_off : Icons.volume_up,
+                          color: Colors.white,
+                        ),
+                        onPressed: _toggleMute,
+                      ),
+                    ),
+
+                    // Buttons column
+                    Positioned(
+                      bottom: 60,
+                      right: 15,
+                      child: Column(
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              isLiked[index]
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isLiked[index] ? Colors.red : Colors.white,
+                              size: 32,
+                            ),
+                            onPressed: () => _handleLike(index),
                           ),
-                          Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.share,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  // Handle share action
-                                },
-                              ),
-                              const Text(
-                                'Share',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
+                          Text(
+                            '${likeCounts[index]}',
+                            style: const TextStyle(color: Colors.white),
                           ),
-                          Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.bookmark,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  // Handle save action
-                                },
-                              ),
-                              const Text(
-                                'Save',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
+                          const SizedBox(height: 20),
+                          IconButton(
+                            icon: const Icon(Icons.comment,
+                                color: Colors.white, size: 30),
+                            onPressed: () => _openCommentsSheet(index),
+                          ),
+                          Text(
+                            '${comments[index].length}',
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
+                    ),
+                  ],
+                );
+              },
             ),
-          );
-        },
-      ),
       bottomNavigationBar: BottomNavbar(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
@@ -282,3 +383,4 @@ class _NewsReelsPageState extends State<NewsReelsPage> {
     );
   }
 }
+

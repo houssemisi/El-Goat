@@ -46,8 +46,10 @@ class _ScoutSignUpPageState extends State<ScoutSignUpPage> {
     setState(() => _isSaving = true);
 
     try {
+      final user = _supabase.auth.currentUser;
       final profile = {
         'user_id': widget.userId,
+        'email': user?.email,
         'full_name': _fullNameCtrl.text.trim(),
         'phone': _phoneCtrl.text.trim(),
         'country': _selectedCountry,

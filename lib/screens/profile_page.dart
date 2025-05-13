@@ -1,5 +1,3 @@
-// Enhanced FootballerProfilePage fetching latest profile data
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,39 +24,26 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
   @override
   void initState() {
     super.initState();
-    _fetchLatestProfile();
+    _fetchFootballerProfile();
   }
 
-  Future<void> _fetchLatestProfile() async {
+  Future<void> _fetchFootballerProfile() async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) {
       setState(() => _loading = false);
       return;
     }
 
-    // Fetch the user's role
-    final roleResponse = await Supabase.instance.client
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (roleResponse == null || roleResponse['role'] == null) {
-      setState(() => _loading = false);
-      return;
-    }
-
-    final role = roleResponse['role'];
-
-    // Fetch the profile data based on the role
     final profileResponse = await Supabase.instance.client
-        .from('${role}_profiles')
+        .from('footballer_profiles')
         .select()
         .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(1)
         .maybeSingle();
 
     setState(() {
-      _profile = profileResponse;
+      _profile = profileResponse is Map<String, dynamic> ? profileResponse : null;
       _loading = false;
     });
   }

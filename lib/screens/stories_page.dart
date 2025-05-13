@@ -10,43 +10,62 @@ class StoriesPage extends StatefulWidget {
 
 class _StoriesPageState extends State<StoriesPage> {
   int _selectedIndex = 1;
+  int _expandedIndex = -1;
 
-  List storiesArr = [
+  final List<Map<String, String>> storiesArr = [
     {
       "name": "Story 1",
       "image": "assets/images/1.jpg",
-      "title": "Story",
-      "subtitle": "This is the first story"
+      "title": "Rising Star",
+      "subtitle": "This is the first story",
+      "fullTitle": "From the Streets to Stardom",
+      "fullText":
+          "This athlete began playing football barefoot in his neighborhood and went on to become a national sensation. Through dedication, hardship, and unbreakable spirit, he earned his place among the elite."
     },
     {
       "name": "Story 2",
       "image": "assets/images/2.jpg",
-      "title": "Story",
-      "subtitle": "This is the second story"
+      "title": "Late Bloomer",
+      "subtitle": "This is the second story",
+      "fullTitle": "The Unexpected Journey",
+      "fullText":
+          "Rejected by academies in his youth, this player didn't give up. He trained alone, got picked up by a second-tier team, and now he's a starter in the premier league."
     },
     {
       "name": "Story 3",
       "image": "assets/images/5.jpeg",
-      "title": "Story",
-      "subtitle": "This is the third story"
+      "title": "Hometown Hero",
+      "subtitle": "This is the third story",
+      "fullTitle": "Carrying the Hopes of His Village",
+      "fullText":
+          "Coming from a small town with no facilities, this young man became the first professional footballer from his region. His story inspires kids from underserved communities."
     },
     {
       "name": "Story 4",
       "image": "assets/images/3.jpg",
-      "title": "Story",
-      "subtitle": "This is the fourth story"
+      "title": "Comeback King",
+      "subtitle": "This is the fourth story",
+      "fullTitle": "Back from the Brink",
+      "fullText":
+          "After a career-threatening injury, many thought his days were over. But with therapy and fierce mental strength, he returned stronger and more determined than ever."
     },
     {
       "name": "Story 5",
       "image": "assets/images/mb.jpeg",
-      "title": "Story",
-      "subtitle": "This is the fifth story"
+      "title": "Young Prodigy",
+      "subtitle": "This is the fifth story",
+      "fullTitle": "Destined for Greatness",
+      "fullText":
+          "Debuting at just 16, this young phenom wowed fans with his talent. Mentored by legends, he’s now setting records and rewriting history books with every match."
     },
     {
       "name": "Story 6",
       "image": "assets/images/cr7.jpeg",
-      "title": "Story",
-      "subtitle": "This is the sixth story"
+      "title": "Legend",
+      "subtitle": "This is the sixth story",
+      "fullTitle": "Legacy of a Champion",
+      "fullText":
+          "His work ethic, hunger, and ability to perform under pressure made him a global icon. His journey from poverty to greatness is a blueprint for aspiring players everywhere."
     },
   ];
 
@@ -89,79 +108,126 @@ class _StoriesPageState extends State<StoriesPage> {
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
           itemCount: storiesArr.length,
           itemBuilder: (context, index) {
-            var sObj = storiesArr[index] as Map? ?? {};
-            return Container(
+            var sObj = storiesArr[index];
+            bool isExpanded = _expandedIndex == index;
+
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOutCubic,
               margin: const EdgeInsets.symmetric(vertical: 10),
-              height: MediaQuery.of(context).size.width * 0.5,
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                  color: Colors.grey, borderRadius: BorderRadius.circular(10)),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
+                color: Colors.grey[900],
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset(
-                    sObj["image"].toString(),
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.width * 0.5,
-                    fit: BoxFit.cover,
-                  ),
-                  Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.width * 0.5,
-                    decoration: BoxDecoration(
-                      color: index % 2 == 0
-                          ? Colors.black.withOpacity(0.7)
-                          : Colors.grey.withOpacity(0.35),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 25, horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          sObj["title"],
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.asset(
+                          sObj["image"]!,
+                          width: double.infinity,
+                          height: MediaQuery.of(context).size.width * 0.5,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Container(
+                        height: MediaQuery.of(context).size.width * 0.5,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: index % 2 == 0
+                              ? Colors.black.withOpacity(0.6)
+                              : Colors.black.withOpacity(0.4),
+                        ),
+                      ),
+                      Positioned(
+                        left: 16,
+                        top: 16,
+                        child: Text(
+                          sObj["title"]!,
                           style: const TextStyle(
-                              color: Colors.blue,
+                              color: Colors.blueAccent,
                               fontSize: 14,
                               fontWeight: FontWeight.w500),
                         ),
-                        Text(
-                          sObj["name"],
-                          style: const TextStyle(
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    sObj["name"]!,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    sObj["subtitle"]!,
+                    style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500),
+                  ),
+                  AnimatedCrossFade(
+                    firstChild: const SizedBox.shrink(),
+                    secondChild: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sObj["fullTitle"] ?? "",
+                            style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          sObj["subtitle"],
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
-                        ),
-                        const Spacer(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            SizedBox(
-                              width: 100,
-                              height: 25,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  // Navigate to the detail view
-                                },
-                                child: const Text(
-                                  "see more",
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500),
-                                ),
-                              ),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        )
-                      ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            sObj["fullText"] ?? "",
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    crossFadeState: isExpanded
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    duration: const Duration(milliseconds: 300),
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _expandedIndex = isExpanded ? -1 : index;
+                        });
+                      },
+                      child: Text(
+                        isExpanded ? "See Less" : "See More",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.orangeAccent,
+                        ),
+                      ),
                     ),
                   ),
                 ],
