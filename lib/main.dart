@@ -22,6 +22,10 @@ import 'screens/favorites_page.dart';
 import 'screens/notifications_page.dart';
 import 'screens/ratings_page.dart';
 import 'screens/login_required_page.dart';
+import 'screens/user_home_page.dart';
+import 'screens/scoutevaluationform_page.dart';
+import 'screens/contact_page.dart';
+import 'screens/settings_page.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -113,6 +117,10 @@ class MyApp extends StatelessWidget {
         '/notifications': (ctx) => const NotificationsPage(),
         '/ratings': (ctx) => const RatingsPage(),
         '/login_required': (ctx) => const LoginRequiredPage(),
+        '/user_home': (ctx) => const UserHomePage(),
+        '/contact': (ctx) => const ContactPage(),
+        '/settings': (ctx) => const SettingsPage(),
+        '/scoutevaluationform': (ctx) => const ScoutEvaluationFormPage(),
       },
       builder: DevicePreview.appBuilder,
       locale: DevicePreview.locale(context),

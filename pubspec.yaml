@@ -73,6 +73,7 @@ flutter:
     - assets/images/player7.jpeg
     - assets/images/player_avatar.jpeg
     - assets/images/player_avatar1.jpeg
+    - assets/images/scout_badge.png
     - assets/videos/football.mp4
     - assets/videos/goal1.mp4
     - assets/videos/goal2.mp4

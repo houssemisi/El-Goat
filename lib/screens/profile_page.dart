@@ -79,6 +79,7 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
     final image = 'assets/images/player_avatar.jpeg';
     final club = data['current_club'] ?? 'None';
     final position = data['position'] ?? 'Unknown';
+    final isScoutApproved = data['is_scout_approved'] == true;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -110,6 +111,7 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ⚽ Header banner + avatar
             Stack(
               children: [
                 Container(
@@ -132,6 +134,8 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
               ],
             ),
             const SizedBox(height: 16),
+
+            // 🔤 Name & edit
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -141,7 +145,30 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
             ),
             const SizedBox(height: 8),
             Text('Position: $position • Club: $club', style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 20),
+
+            // ✅ Scout Approved Badge
+            if (isScoutApproved)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  children: [
+                    Image.asset('assets/images/scout_badge.png', width: 40),
+                    const SizedBox(width: 10),
+                    const Text(
+                      "Scout Approved",
+                      style: TextStyle(
+                        color: Colors.amberAccent,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 12),
+
+            // 🎯 Quick buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -151,6 +178,8 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
               ],
             ),
             const SizedBox(height: 20),
+
+            // 🎮 FIFA Card
             FifaPlayerCard(
               playerName: name,
               overallRating: 89,
@@ -160,6 +189,8 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
               stats: {'PAC': 85, 'SHO': 90, 'PAS': 82, 'DRI': 88, 'DEF': 40, 'PHY': 78},
             ),
             const SizedBox(height: 24),
+
+            // 🛤 Journey Upload
             const Text('My Journey', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
             const SizedBox(height: 10),
             GestureDetector(
@@ -171,6 +202,8 @@ class _FootballerProfilePageState extends State<FootballerProfilePage> {
               ),
             ),
             const SizedBox(height: 10),
+
+            // 🖼 Uploaded journey gallery
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),

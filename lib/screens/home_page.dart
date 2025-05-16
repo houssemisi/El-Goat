@@ -54,10 +54,13 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.black,
       drawer: Drawer(
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.black87, Colors.black]),
-          ),
+  child: Container(
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(colors: [Colors.black87, Colors.black]),
+    ),
+    child: Column(
+      children: [
+        Expanded(
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -81,7 +84,21 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-      ),
+        const Divider(color: Colors.grey),
+        ListTile(
+          leading: const Icon(Icons.contact_mail, color: Colors.white),
+          title: const Text('Contact', style: TextStyle(color: Colors.white)),
+          onTap: () => Navigator.pushNamed(context, '/contact'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.settings, color: Colors.white),
+          title: const Text('Settings', style: TextStyle(color: Colors.white)),
+          onTap: () => Navigator.pushNamed(context, '/settings'),
+        ),
+      ],
+    ),
+  ),
+),
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
